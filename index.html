@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevUtils - JSON Tools</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0a0a0f;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(138, 43, 226, 0.2) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(67, 56, 202, 0.2) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.2) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, rgba(79, 70, 229, 0.2) 0px, transparent 50%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: #e5e7eb;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(17, 17, 27, 0.7);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            box-shadow: 
+                0 0 0 1px rgba(255, 255, 255, 0.05),
+                0 20px 60px rgba(0, 0, 0, 0.5),
+                0 0 80px rgba(139, 92, 246, 0.1);
+            padding: 48px;
+            transition: all 0.3s ease;
+        }
+
+        h1 {
+            background: linear-gradient(135deg, #a78bfa 0%, #ec4899 50%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+            font-size: 42px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            color: #9ca3af;
+            margin-bottom: 30px;
+            font-size: 16px;
+            font-weight: 400;
+            letter-spacing: 0.01em;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+            border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+            padding-bottom: 0;
+        }
+
+        .tab {
+            padding: 14px 28px;
+            background: transparent;
+            color: #9ca3af;
+            border: none;
+            border-radius: 8px 8px 0 0;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            position: relative;
+            box-shadow: none;
+        }
+
+        .tab::before {
+            display: none;
+        }
+
+        .tab:hover {
+            color: #d1d5db;
+            background: rgba(139, 92, 246, 0.1);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .tab.active {
+            color: #a78bfa;
+            background: rgba(139, 92, 246, 0.15);
+            border-bottom: 3px solid #8b5cf6;
+        }
+
+        .tab.active:hover {
+            transform: none;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeInTab 0.3s ease-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeInTab {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .input-section {
+            margin-bottom: 28px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 12px;
+            color: #d1d5db;
+            font-weight: 600;
+            font-size: 14px;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 16px;
+            background: rgba(30, 30, 46, 0.6);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 13px;
+            color: #e5e7eb;
+            resize: vertical;
+            transition: all 0.3s ease;
+            line-height: 1.6;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: rgba(139, 92, 246, 0.6);
+            background: rgba(30, 30, 46, 0.8);
+            box-shadow: 
+                0 0 0 3px rgba(139, 92, 246, 0.1),
+                0 8px 24px rgba(139, 92, 246, 0.2);
+        }
+
+        textarea::selection {
+            background: rgba(139, 92, 246, 0.3);
+        }
+
+        #jsonInput {
+            min-height: 320px;
+        }
+
+        #result {
+            min-height: 240px;
+            background: rgba(20, 20, 30, 0.8);
+        }
+
+        #json1, #json2 {
+            min-height: 200px;
+        }
+
+        #compareResult {
+            min-height: 300px;
+            background: rgba(20, 20, 30, 0.8);
+        }
+
+        .path-container {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .path-input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(30, 30, 46, 0.6);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 14px;
+            color: #e5e7eb;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: rgba(139, 92, 246, 0.6);
+            background: rgba(30, 30, 46, 0.8);
+            box-shadow: 
+                0 0 0 3px rgba(139, 92, 246, 0.1),
+                0 8px 24px rgba(139, 92, 246, 0.2);
+        }
+
+        input[type="text"]::placeholder {
+            color: #6b7280;
+        }
+
+        button {
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            box-shadow: 0 4px 16px rgba(139, 92, 246, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(139, 92, 246, 0.5);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .error {
+            color: #fca5a5;
+            background: rgba(220, 38, 38, 0.15);
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 16px;
+            border-left: 3px solid #dc2626;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+        }
+
+        .success {
+            color: #86efac;
+            background: rgba(34, 197, 94, 0.15);
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 16px;
+            border-left: 3px solid #22c55e;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+        }
+
+        .example {
+            background: rgba(59, 130, 246, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #93c5fd;
+            margin-top: 8px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .copy-btn {
+            padding: 10px 24px;
+            font-size: 12px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+        }
+
+        .copy-btn:hover {
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.5);
+        }
+
+        .copy-btn.copied {
+            background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+        }
+
+        .download-btn {
+            padding: 10px 24px;
+            font-size: 12px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+        }
+
+        .download-btn:hover {
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.5);
+        }
+
+        .download-btn svg {
+            width: 14px;
+            height: 14px;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .beautify-btn {
+            padding: 8px 20px;
+            font-size: 12px;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3);
+        }
+
+        .beautify-btn:hover {
+            box-shadow: 0 8px 24px rgba(245, 158, 11, 0.5);
+        }
+
+        .beautify-btn svg {
+            width: 14px;
+            height: 14px;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        .json-input-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            margin-top: 4px;
+            background: rgba(30, 30, 46, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            border-radius: 12px;
+            box-shadow: 
+                0 0 0 1px rgba(255, 255, 255, 0.05),
+                0 20px 40px rgba(0, 0, 0, 0.5),
+                0 0 60px rgba(139, 92, 246, 0.2);
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .autocomplete-dropdown.show {
+            display: block;
+            animation: slideDown 0.2s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .autocomplete-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #d1d5db;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 13px;
+            border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+        }
+
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-item:hover,
+        .autocomplete-item.selected {
+            background: rgba(139, 92, 246, 0.2);
+            color: #a78bfa;
+        }
+
+        .autocomplete-item .path-prefix {
+            color: #6b7280;
+        }
+
+        .autocomplete-item .path-match {
+            color: #a78bfa;
+            font-weight: 600;
+        }
+
+        .autocomplete-empty {
+            padding: 16px;
+            text-align: center;
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        /* Scrollbar styling */
+        textarea::-webkit-scrollbar,
+        *::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        textarea::-webkit-scrollbar-track,
+        *::-webkit-scrollbar-track {
+            background: rgba(30, 30, 46, 0.4);
+            border-radius: 4px;
+        }
+
+        textarea::-webkit-scrollbar-thumb,
+        *::-webkit-scrollbar-thumb {
+            background: rgba(139, 92, 246, 0.5);
+            border-radius: 4px;
+        }
+
+        textarea::-webkit-scrollbar-thumb:hover,
+        *::-webkit-scrollbar-thumb:hover {
+            background: rgba(139, 92, 246, 0.7);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .container {
+            animation: fadeIn 0.6s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DevUtils - JSON Tools</h1>
+        <p class="subtitle">Powerful JSON manipulation tools for developers</p>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('path-query')">Path Query</button>
+            <button class="tab" onclick="switchTab('compare')">JSON Compare</button>
+        </div>
+
+        <!-- Path Query Tab -->
+        <div id="path-query" class="tab-content active">
+            <div class="input-section">
+                <div class="json-input-header">
+                    <label for="jsonInput">JSON Input:</label>
+                    <button class="beautify-btn" onclick="beautifyJSON()">
+                        <svg fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                        </svg>
+                        Beautify
+                    </button>
+                </div>
+                <textarea id="jsonInput" placeholder='Paste your JSON here...'></textarea>
+            </div>
+
+            <div class="input-section">
+                <div class="path-container">
+                    <div class="path-input-wrapper">
+                        <label for="pathInput">Path (dot notation):</label>
+                        <input type="text" id="pathInput" placeholder="e.g., system.services.api" autocomplete="off">
+                        <div id="autocompleteDropdown" class="autocomplete-dropdown"></div>
+                        <div class="example">Example: system.services.api or system.services.kafka.topics.orders</div>
+                    </div>
+                    <button onclick="extractPath()">Extract</button>
+                </div>
+            </div>
+
+            <div class="input-section">
+                <div class="result-header">
+                    <label for="result">Result:</label>
+                    <div class="result-actions">
+                        <button class="download-btn" onclick="downloadResult()">
+                            <svg fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                            Download
+                        </button>
+                        <button class="copy-btn" onclick="copyResult()">Copy Result</button>
+                    </div>
+                </div>
+                <textarea id="result" readonly></textarea>
+            </div>
+
+            <div id="message"></div>
+        </div>
+
+        <!-- JSON Compare Tab -->
+        <div id="compare" class="tab-content">
+            <div class="input-section">
+                <div class="json-input-header">
+                    <label for="json1">JSON 1 (Original):</label>
+                    <button class="beautify-btn" onclick="beautifyCompareJSON('json1')">
+                        <svg fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                        </svg>
+                        Beautify
+                    </button>
+                </div>
+                <textarea id="json1" placeholder='Paste first JSON here...'></textarea>
+            </div>
+
+            <div class="input-section">
+                <div class="json-input-header">
+                    <label for="json2">JSON 2 (Modified):</label>
+                    <button class="beautify-btn" onclick="beautifyCompareJSON('json2')">
+                        <svg fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                        </svg>
+                        Beautify
+                    </button>
+                </div>
+                <textarea id="json2" placeholder='Paste second JSON here...'></textarea>
+            </div>
+
+            <div class="input-section">
+                <button onclick="compareJSON()" style="width: 100%;">Compare JSONs</button>
+            </div>
+
+            <div class="input-section">
+                <div class="result-header">
+                    <label for="compareResult">Comparison Result:</label>
+                    <button class="copy-btn" onclick="copyCompareResult()">Copy Result</button>
+                </div>
+                <textarea id="compareResult" readonly></textarea>
+            </div>
+
+            <div id="compareMessage"></div>
+        </div>
+    </div>
+
+<script>
+    // Sample JSON for testing
+    const sampleJSON = {
+        "system": {
+            "name": "Order Processing Platform",
+            "environment": "production",
+            "region": "us-east-1",
+            "services": {
+                "api": {
+                    "status": "running",
+                    "version": "1.4.2",
+                    "instances": 3,
+                    "endpoints": {
+                        "createOrder": "/api/orders",
+                        "getOrder": "/api/orders/{id}"
+                    }
+                },
+                "kafka": {
+                    "brokers": [
+                        {
+                            "id": 1,
+                            "host": "kafka-1.internal",
+                            "port": 9092
+                        },
+                        {
+                            "id": 2,
+                            "host": "kafka-2.internal",
+                            "port": 9092
+                        }
+                    ],
+                    "topics": {
+                        "orders": {
+                            "partitions": 3,
+                            "replicationFactor": 2,
+                            "retry": {
+                                "attempts": 3,
+                                "backoff": {
+                                    "initialDelayMs": 5000,
+                                    "multiplier": 2.0
+                                },
+                                "deadLetterTopic": "orders-dlt"
+                            }
+                        }
+                    }
+                },
+                "database": {
+                    "type": "postgresql",
+                    "cluster": {
+                        "primary": {
+                            "host": "db-primary.internal",
+                            "port": 5432
+                        },
+                        "replicas": [
+                            {
+                                "host": "db-replica-1.internal",
+                                "port": 5432
+                            },
+                            {
+                                "host": "db-replica-2.internal",
+                                "port": 5432
+                            }
+                        ]
+                    }
+                },
+                "redis": {
+                    "host": "redis.internal",
+                    "port": 6379,
+                    "features": {
+                        "caching": true,
+                        "rateLimiting": true,
+                        "pubSub": false
+                    }
+                }
+            }
+        }
+    };
+
+    // Load sample JSON on page load
+    window.onload = function() {
+        document.getElementById('jsonInput').value = JSON.stringify(sampleJSON, null, 2);
+        document.getElementById('pathInput').value = 'system.services.api';
+    };
+
+    function extractPath() {
+        const jsonInput = document.getElementById('jsonInput').value;
+        const pathInput = document.getElementById('pathInput').value.trim();
+        const resultArea = document.getElementById('result');
+        const messageDiv = document.getElementById('message');
+        
+        // Clear previous messages
+        messageDiv.innerHTML = '';
+        
+        // Validate inputs
+        if (!jsonInput) {
+            showMessage('Please provide JSON input', 'error');
+            return;
+        }
+        
+        if (!pathInput) {
+            showMessage('Please provide a path', 'error');
+            return;
+        }
+        
+        try {
+            // Auto-beautify JSON before extracting
+            const jsonObj = JSON.parse(jsonInput);
+            document.getElementById('jsonInput').value = JSON.stringify(jsonObj, null, 2);
+            
+            const pathParts = pathInput.split('.');
+            let result = jsonObj;
+            
+            for (let i = 0; i < pathParts.length; i++) {
+                const part = pathParts[i];
+                
+                if (result === null || result === undefined) {
+                    showMessage(`Path not found: "${pathParts.slice(0, i).join('.')}" is null or undefined`, 'error');
+                    resultArea.value = '';
+                    return;
+                }
+                
+                if (typeof result !== 'object') {
+                    showMessage(`Path not found: "${pathParts.slice(0, i).join('.')}" is not an object`, 'error');
+                    resultArea.value = '';
+                    return;
+                }
+                
+                if (!result.hasOwnProperty(part)) {
+                    showMessage(`Path not found: property "${part}" does not exist in "${pathParts.slice(0, i).join('.') || 'root'}"`, 'error');
+                    resultArea.value = '';
+                    return;
+                }
+                
+                result = result[part];
+            }
+            
+            if (typeof result === 'object') {
+                resultArea.value = JSON.stringify(result, null, 2);
+            } else {
+                resultArea.value = String(result);
+            }
+            
+            showMessage('Path extracted successfully!', 'success');
+            
+        } catch (error) {
+            showMessage('Invalid JSON: ' + error.message, 'error');
+            resultArea.value = '';
+        }
+    }
+    
+    function showMessage(text, type) {
+        const messageDiv = document.getElementById('message');
+        messageDiv.className = type;
+        messageDiv.textContent = text;
+    }
+    
+    function beautifyJSON() {
+        const jsonInput = document.getElementById('jsonInput');
+        const messageDiv = document.getElementById('message');
+        
+        if (!jsonInput.value.trim()) {
+            showMessage('Please provide JSON to beautify', 'error');
+            return;
+        }
+        
+        try {
+            const jsonObj = JSON.parse(jsonInput.value);
+            jsonInput.value = JSON.stringify(jsonObj, null, 2);
+            showMessage('JSON beautified successfully!', 'success');
+        } catch (error) {
+            showMessage('Invalid JSON: ' + error.message, 'error');
+        }
+    }
+    
+    function downloadResult() {
+        const resultArea = document.getElementById('result');
+        const pathInput = document.getElementById('pathInput').value.trim();
+        
+        if (!resultArea.value) {
+            showMessage('No result to download', 'error');
+            return;
+        }
+        
+        try {
+            // Try to parse as JSON to ensure it's valid
+            let content = resultArea.value;
+            let filename = 'result.json';
+            
+            // Use path as filename if available
+            if (pathInput) {
+                const pathParts = pathInput.split('.');
+                const lastPart = pathParts[pathParts.length - 1];
+                filename = `${lastPart}.json`;
+            }
+            
+            // Create blob and download
+            const blob = new Blob([content], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showMessage(`Downloaded as ${filename}`, 'success');
+        } catch (error) {
+            showMessage('Failed to download: ' + error.message, 'error');
+        }
+    }
+
+    function copyResult() {
+        const resultArea = document.getElementById('result');
+        const copyBtn = event.target;
+        
+        if (!resultArea.value) {
+            showMessage('No result to copy', 'error');
+            return;
+        }
+        
+        resultArea.select();
+        document.execCommand('copy');
+        
+        navigator.clipboard.writeText(resultArea.value).then(() => {
+            // Visual feedback
+            const originalText = copyBtn.textContent;
+            copyBtn.textContent = '✓ Copied!';
+            copyBtn.classList.add('copied');
+            
+            setTimeout(() => {
+                copyBtn.textContent = originalText;
+                copyBtn.classList.remove('copied');
+            }, 2000);
+            
+            showMessage('Result copied to clipboard!', 'success');
+        }).catch(err => {
+            showMessage('Failed to copy: ' + err.message, 'error');
+        });
+    }
+    
+    // Autocomplete functionality
+    let currentSelection = -1;
+    let currentSuggestions = [];
+
+    function getAllPaths(obj, prefix = '') {
+        const paths = [];
+        
+        if (typeof obj !== 'object' || obj === null) {
+            return paths;
+        }
+        
+        for (const key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                const currentPath = prefix ? `${prefix}.${key}` : key;
+                paths.push(currentPath);
+                
+                if (typeof obj[key] === 'object' && obj[key] !== null) {
+                    paths.push(...getAllPaths(obj[key], currentPath));
+                }
+            }
+        }
+        
+        return paths;
+    }
+
+    function showAutocomplete(inputValue) {
+        const dropdown = document.getElementById('autocompleteDropdown');
+        const jsonInput = document.getElementById('jsonInput').value;
+        
+        if (!jsonInput) {
+            dropdown.classList.remove('show');
+            return;
+        }
+        
+        try {
+            const jsonObj = JSON.parse(jsonInput);
+            const allPaths = getAllPaths(jsonObj);
+            
+            // Filter paths based on input
+            let suggestions = allPaths;
+            if (inputValue) {
+                suggestions = allPaths.filter(path => 
+                    path.toLowerCase().startsWith(inputValue.toLowerCase())
+                );
+            }
+            
+            currentSuggestions = suggestions;
+            currentSelection = -1;
+            
+            if (suggestions.length === 0) {
+                dropdown.innerHTML = '<div class="autocomplete-empty">No matching paths found</div>';
+                dropdown.classList.add('show');
+                return;
+            }
+            
+            // Limit to 10 suggestions
+            suggestions = suggestions.slice(0, 10);
+            
+            dropdown.innerHTML = suggestions.map((path, index) => {
+                const inputLen = inputValue.length;
+                const prefix = path.substring(0, inputLen);
+                const rest = path.substring(inputLen);
+                
+                return `<div class="autocomplete-item" data-index="${index}" data-path="${path}">
+                    <span class="path-match">${prefix}</span><span class="path-prefix">${rest}</span>
+                </div>`;
+            }).join('');
+            
+            dropdown.classList.add('show');
+            
+            // Add click handlers
+            dropdown.querySelectorAll('.autocomplete-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    document.getElementById('pathInput').value = this.dataset.path;
+                    dropdown.classList.remove('show');
+                    document.getElementById('pathInput').focus();
+                });
+            });
+        } catch (error) {
+            dropdown.classList.remove('show');
+        }
+    }
+
+    function navigateAutocomplete(direction) {
+        const dropdown = document.getElementById('autocompleteDropdown');
+        const items = dropdown.querySelectorAll('.autocomplete-item');
+        
+        if (items.length === 0) return;
+        
+        // Remove previous selection
+        if (currentSelection >= 0 && currentSelection < items.length) {
+            items[currentSelection].classList.remove('selected');
+        }
+        
+        // Update selection
+        if (direction === 'down') {
+            currentSelection = (currentSelection + 1) % items.length;
+        } else if (direction === 'up') {
+            currentSelection = currentSelection <= 0 ? items.length - 1 : currentSelection - 1;
+        }
+        
+        // Add new selection
+        items[currentSelection].classList.add('selected');
+        items[currentSelection].scrollIntoView({ block: 'nearest' });
+    }
+
+    function selectCurrentAutocomplete() {
+        const dropdown = document.getElementById('autocompleteDropdown');
+        const items = dropdown.querySelectorAll('.autocomplete-item');
+        
+        if (currentSelection >= 0 && currentSelection < items.length) {
+            document.getElementById('pathInput').value = items[currentSelection].dataset.path;
+            dropdown.classList.remove('show');
+            return true;
+        }
+        return false;
+    }
+
+    // Path input event listeners
+    const pathInput = document.getElementById('pathInput');
+    
+    pathInput.addEventListener('input', function(e) {
+        showAutocomplete(this.value);
+    });
+    
+    pathInput.addEventListener('focus', function(e) {
+        showAutocomplete(this.value);
+    });
+    
+    pathInput.addEventListener('keydown', function(e) {
+        const dropdown = document.getElementById('autocompleteDropdown');
+        
+        if (dropdown.classList.contains('show')) {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                navigateAutocomplete('down');
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                navigateAutocomplete('up');
+            } else if (e.key === 'Enter') {
+                if (selectCurrentAutocomplete()) {
+                    e.preventDefault();
+                } else {
+                    extractPath();
+                }
+            } else if (e.key === 'Escape') {
+                dropdown.classList.remove('show');
+            }
+        } else if (e.key === 'Enter') {
+            extractPath();
+        }
+    });
+    
+    // Close autocomplete when clicking outside
+    document.addEventListener('click', function(e) {
+        const dropdown = document.getElementById('autocompleteDropdown');
+        const pathInputWrapper = document.querySelector('.path-input-wrapper');
+        
+        if (!pathInputWrapper.contains(e.target)) {
+            dropdown.classList.remove('show');
+        }
+    });
+
+    // Tab switching functionality
+    function switchTab(tabName) {
+        // Hide all tab contents
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        
+        // Remove active class from all tabs
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Show selected tab content
+        document.getElementById(tabName).classList.add('active');
+        
+        // Add active class to clicked tab
+        event.target.classList.add('active');
+    }
+
+    // JSON Compare functionality
+    function beautifyCompareJSON(id) {
+        const jsonInput = document.getElementById(id);
+        const messageDiv = document.getElementById('compareMessage');
+        
+        if (!jsonInput.value.trim()) {
+            showCompareMessage('Please provide JSON to beautify', 'error');
+            return;
+        }
+        
+        try {
+            const jsonObj = JSON.parse(jsonInput.value);
+            jsonInput.value = JSON.stringify(jsonObj, null, 2);
+            showCompareMessage('JSON beautified successfully!', 'success');
+        } catch (error) {
+            showCompareMessage('Invalid JSON: ' + error.message, 'error');
+        }
+    }
+
+    function compareJSON() {
+        const json1Input = document.getElementById('json1').value;
+        const json2Input = document.getElementById('json2').value;
+        const resultArea = document.getElementById('compareResult');
+        const messageDiv = document.getElementById('compareMessage');
+        
+        // Clear previous messages
+        messageDiv.innerHTML = '';
+        
+        // Validate inputs
+        if (!json1Input) {
+            showCompareMessage('Please provide JSON 1', 'error');
+            return;
+        }
+        
+        if (!json2Input) {
+            showCompareMessage('Please provide JSON 2', 'error');
+            return;
+        }
+        
+        try {
+            const obj1 = JSON.parse(json1Input);
+            const obj2 = JSON.parse(json2Input);
+            
+            const differences = findDifferences(obj1, obj2);
+            
+            if (differences.length === 0) {
+                resultArea.value = 'JSONs are identical! ✓';
+                showCompareMessage('No differences found', 'success');
+            } else {
+                let output = `Found ${differences.length} difference(s):\n\n`;
+                output += differences.map((diff, index) => {
+                    return `${index + 1}. Path: ${diff.path}\n   Type: ${diff.type}\n   Original: ${JSON.stringify(diff.value1)}\n   Modified: ${JSON.stringify(diff.value2)}\n`;
+                }).join('\n');
+                
+                resultArea.value = output;
+                showCompareMessage(`Found ${differences.length} difference(s)`, 'success');
+            }
+            
+        } catch (error) {
+            showCompareMessage('Invalid JSON: ' + error.message, 'error');
+            resultArea.value = '';
+        }
+    }
+
+    function findDifferences(obj1, obj2, path = '') {
+        const differences = [];
+        
+        // Get all keys from both objects
+        const keys1 = obj1 !== null && typeof obj1 === 'object' ? Object.keys(obj1) : [];
+        const keys2 = obj2 !== null && typeof obj2 === 'object' ? Object.keys(obj2) : [];
+        const allKeys = new Set([...keys1, ...keys2]);
+        
+        // If values are different types or primitives
+        if (typeof obj1 !== typeof obj2) {
+            differences.push({
+                path: path || 'root',
+                type: 'Type changed',
+                value1: obj1,
+                value2: obj2
+            });
+            return differences;
+        }
+        
+        // If both are primitives/null
+        if (typeof obj1 !== 'object' || obj1 === null) {
+            if (obj1 !== obj2) {
+                differences.push({
+                    path: path || 'root',
+                    type: 'Value changed',
+                    value1: obj1,
+                    value2: obj2
+                });
+            }
+            return differences;
+        }
+        
+        // Compare all keys
+        for (const key of allKeys) {
+            const currentPath = path ? `${path}.${key}` : key;
+            const has1 = key in obj1;
+            const has2 = key in obj2;
+            
+            if (!has1) {
+                differences.push({
+                    path: currentPath,
+                    type: 'Added',
+                    value1: undefined,
+                    value2: obj2[key]
+                });
+            } else if (!has2) {
+                differences.push({
+                    path: currentPath,
+                    type: 'Removed',
+                    value1: obj1[key],
+                    value2: undefined
+                });
+            } else {
+                // Both have the key, compare recursively
+                differences.push(...findDifferences(obj1[key], obj2[key], currentPath));
+            }
+        }
+        
+        return differences;
+    }
+
+    function showCompareMessage(text, type) {
+        const messageDiv = document.getElementById('compareMessage');
+        messageDiv.className = type;
+        messageDiv.textContent = text;
+    }
+
+    function copyCompareResult() {
+        const resultArea = document.getElementById('compareResult');
+        const copyBtn = event.target;
+        
+        if (!resultArea.value) {
+            showCompareMessage('No result to copy', 'error');
+            return;
+        }
+        
+        resultArea.select();
+        document.execCommand('copy');
+        
+        navigator.clipboard.writeText(resultArea.value).then(() => {
+            const originalText = copyBtn.textContent;
+            copyBtn.textContent = '✓ Copied!';
+            copyBtn.classList.add('copied');
+            
+            setTimeout(() => {
+                copyBtn.textContent = originalText;
+                copyBtn.classList.remove('copied');
+            }, 2000);
+            
+            showCompareMessage('Result copied to clipboard!', 'success');
+        }).catch(err => {
+            showCompareMessage('Failed to copy: ' + err.message, 'error');
+        });
+    }
+</script>
+</body>
+</html>
